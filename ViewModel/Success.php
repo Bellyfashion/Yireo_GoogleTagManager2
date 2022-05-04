@@ -28,12 +28,12 @@ class Success implements ArgumentInterface
      * @var Config
      */
     private $config;
-    
+
     /**
      * @var Session
      */
     private $checkoutSession;
-    
+
     /**
      * @var OrderRepositoryInterface
      */
@@ -79,7 +79,7 @@ class Success implements ArgumentInterface
             'transactionPromoCode' => $this->getTransactionPromoCode($order),
             'transactionProducts' => $this->getItemsAsArray($order),
             'ecommerce' => $this->getEcommerceAttributesAsArray($order),
-            'event' => 'transaction',
+            'event' => 'purchase',
         ];
     }
 
@@ -112,10 +112,8 @@ class Success implements ArgumentInterface
         foreach ($order->getItemsCollection([], true) as $item) {
             /** @var Item $item */
             $itemData = [
-                'productId' => $item->getProductId(),
-                'id' => $item->getProductId(),
-                'sku' => $item->getSku(),
-                'name' => $item->getName(),
+	            'item_id' => $item->getSku(),
+	            'item_name' => $item->getName(),
                 'price' => $item->getPriceInclTax(),
                 'quantity' => $item->getQtyOrdered(),
             ];
@@ -146,15 +144,14 @@ class Success implements ArgumentInterface
     private function getEcommerceAttributesAsArray(OrderInterface $order): array
     {
         return [
-            'purchase' => [
-                'actionField' => [
-                    'id' => $this->getTransactionId($order),
-                    'affiliation' => $this->getTransactionAffiliation(),
-                    'revenue' => $this->getTransactionTotal($order),
-                    'tax' => $this->getTransactionTax($order),
-                    'shipping' => $this->getTransactionShipping($order),
-                    'coupon' => $this->getTransactionPromoCode($order),
-                ],
+	        'transaction_id' => $this->getTransactionId($order),
+	        'affiliation' => $this->getTransactionAffiliation(),
+	        'value' => $this->getTransactionTotal($order),
+	        'tax' => $this->getTransactionTax($order),
+	        'shipping' => $this->getTransactionShipping($order),
+	        'currency' => (string) $order->getOrderCurrencyCode(),
+            'coupon'=> $this->getTransactionPromoCode($order),
+            'items' => [
                 'products' => $this->getItemsAsArray($order),
             ],
         ];

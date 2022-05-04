@@ -174,10 +174,10 @@ class AddDataToCartSection
         foreach ($quote->getAllVisibleItems() as $item) {
             /** @var Item $item */
             $itemData = [
-                'productId' => $item->getProduct()->getId(),
-                'sku' => $item->getProduct()->getSku(),
-                'name' => $item->getProduct()->getName(),
+                'item_id' => $item->getProduct()->getSku(),
+                'item_name' => $item->getProduct()->getName(),
                 'price' => $item->getProduct()->getPrice(),
+	            'currency' => $this->getBaseCurrency(),
                 'quantity' => $item->getQty(),
             ];
             // getData makes sure the chosen simple product / product options are ignored
