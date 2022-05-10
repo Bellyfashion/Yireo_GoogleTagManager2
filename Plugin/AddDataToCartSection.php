@@ -20,174 +20,182 @@ use Magento\Sales\Model\Order\Item;
 
 class AddDataToCartSection
 {
-    /**
-     * @var CheckoutSession
-     */
-    private $checkoutSession;
+	/**
+	 * @var CheckoutSession
+	 */
+	private $checkoutSession;
 
-    /**
-     * @var QuoteModel
-     */
-    private $quote;
+	/**
+	 * @var QuoteModel
+	 */
+	private $quote;
 
-    /**
-     * @var ScopeConfigInterface
-     */
-    private $scopeConfig;
+	/**
+	 * @var ScopeConfigInterface
+	 */
+	private $scopeConfig;
 
-    /**
-     * @param CheckoutSession $checkoutSession
-     * @param CheckoutCart $checkoutCart
-     * @param ScopeConfigInterface $scopeConfig
-     */
-    public function __construct(
-        CheckoutSession $checkoutSession,
-        CheckoutCart $checkoutCart,
-        ScopeConfigInterface $scopeConfig
-    ) {
-        $this->checkoutSession = $checkoutSession;
-        $this->quote = $checkoutCart->getQuote();
-        $this->scopeConfig = $scopeConfig;
-    }
+	/**
+	 * @param   CheckoutSession       $checkoutSession
+	 * @param   CheckoutCart          $checkoutCart
+	 * @param   ScopeConfigInterface  $scopeConfig
+	 */
+	public function __construct(
+		CheckoutSession      $checkoutSession,
+		CheckoutCart         $checkoutCart,
+		ScopeConfigInterface $scopeConfig
+	)
+	{
+		$this->checkoutSession = $checkoutSession;
+		$this->quote           = $checkoutCart->getQuote();
+		$this->scopeConfig     = $scopeConfig;
+	}
 
-    /**
-     * @param CustomerData $subject
-     * @param array $result
-     * @return array
-     */
-    public function afterGetSectionData(CustomerData $subject, $result)
-    {
-        $quoteId = $this->getQuoteId();
-        if (empty($result) || !is_array($result) || empty($quoteId)) {
-            return $result;
-        }
+	/**
+	 * @param   CustomerData  $subject
+	 * @param   array         $result
+	 *
+	 * @return array
+	 */
+	public function afterGetSectionData(CustomerData $subject, $result)
+	{
+		$quoteId = $this->getQuoteId();
+		if (empty($result) || !is_array($result) || empty($quoteId))
+		{
+			return $result;
+		}
 
-        $result['gtm'] = [
-            'transactionEntity' => 'QUOTE',
-            'transactionId' => $quoteId,
-            'transactionAffiliation' => $this->getWebsiteName(),
-            'transactionTotal' => $this->getTotalAmount(),
-            'transactionTax' => $this->getTaxAmount(),
-            'transactionCurrency' => $this->getBaseCurrency(),
-            'transactionProducts' => $this->getItemsAsArray()
-        ];
+		$result['gtm'] = [
+			'transactionEntity'      => 'QUOTE',
+			'transactionId'          => $quoteId,
+			'transactionAffiliation' => $this->getWebsiteName(),
+			'transactionTotal'       => $this->getTotalAmount(),
+			'transactionTax'         => $this->getTaxAmount(),
+			'transactionCurrency'    => $this->getBaseCurrency(),
+			'transactionProducts'    => $this->getItemsAsArray()
+		];
 
-        return $result;
-    }
+		return $result;
+	}
 
-    /**
-     * @return int
-     */
-    private function getQuoteId(): int
-    {
-        return (int) $this->quote->getId();
-    }
+	/**
+	 * @return int
+	 */
+	private function getQuoteId(): int
+	{
+		return (int) $this->quote->getId();
+	}
 
-    /**
-     * @return string
-     */
-    private function getWebsiteName(): string
-    {
-        return (string) $this->scopeConfig->getValue('general/store_information/name');
-    }
+	/**
+	 * @return string
+	 */
+	private function getWebsiteName(): string
+	{
+		return (string) $this->scopeConfig->getValue('general/store_information/name');
+	}
 
-    /**
-     * @return string
-     */
-    private function getBaseCurrency(): string
-    {
-        return (string) $this->quote->getQuoteCurrencyCode();
-    }
+	/**
+	 * @return string
+	 */
+	private function getBaseCurrency(): string
+	{
+		return (string) $this->quote->getQuoteCurrencyCode();
+	}
 
-    /**
-     * @return float
-     */
-    private function getTotalAmount(): float
-    {
-        return (float)$this->quote->getGrandTotal();
-    }
+	/**
+	 * @return float
+	 */
+	private function getTotalAmount(): float
+	{
+		return (float) $this->quote->getGrandTotal();
+	}
 
-    /**
-     * @return float
-     */
-    private function getTaxAmount(): float
-    {
-        return (float)$this->quote->getGrandTotal() - $this->quote->getSubtotal();
-    }
+	/**
+	 * @return float
+	 */
+	private function getTaxAmount(): float
+	{
+		return (float) $this->quote->getGrandTotal() - $this->quote->getSubtotal();
+	}
 
-    /**
-     * @return OrderInterface
-     */
-    private function getOrder(): OrderInterface
-    {
-        return $this->checkoutSession->getLastRealOrder();
-    }
+	/**
+	 * @return OrderInterface
+	 */
+	private function getOrder(): OrderInterface
+	{
+		return $this->checkoutSession->getLastRealOrder();
+	}
 
-    /**
-     * @return string
-     */
-    private function getOrderId(): string
-    {
-        if ($this->hasOrder() === false) {
-            return '';
-        }
+	/**
+	 * @return string
+	 */
+	private function getOrderId(): string
+	{
+		if ($this->hasOrder() === false)
+		{
+			return '';
+		}
 
-        return (string) $this->getOrder()->getIncrementId();
-    }
+		return (string) $this->getOrder()->getIncrementId();
+	}
 
-    /**
-     * @return bool
-     */
-    private function hasOrder(): bool
-    {
-        $order = $this->getOrder();
-        if ($order->getItems()) {
-            return true;
-        }
+	/**
+	 * @return bool
+	 */
+	private function hasOrder(): bool
+	{
+		$order = $this->getOrder();
+		if ($order->getItems())
+		{
+			return true;
+		}
 
-        return false;
-    }
+		return false;
+	}
 
-    /**
-     * @return bool
-     */
-    private function hasQuote(): bool
-    {
-        $quote = $this->quote;
-        if ($quote->getItems()) {
-            return true;
-        }
+	/**
+	 * @return bool
+	 */
+	private function hasQuote(): bool
+	{
+		$quote = $this->quote;
+		if ($quote->getItems())
+		{
+			return true;
+		}
 
-        return false;
-    }
+		return false;
+	}
 
-    /**
-     * Return all quote items as array
-     *
-     * @return array
-     */
-    private function getItemsAsArray(): array
-    {
-        $quote = $this->quote;
-        $data = [];
+	/**
+	 * Return all quote items as array
+	 *
+	 * @return array
+	 */
+	private function getItemsAsArray(): array
+	{
+		$quote = $this->quote;
+		$data  = [];
 
-        foreach ($quote->getAllVisibleItems() as $item) {
-            /** @var Item $item */
-            $itemData = [
-                'item_id' => $item->getProduct()->getSku(),
-                'item_name' => $item->getProduct()->getName(),
-                'price' => $item->getProduct()->getPrice(),
-	            'currency' => $this->getBaseCurrency(),
-                'quantity' => $item->getQty(),
-            ];
-            // getData makes sure the chosen simple product / product options are ignored
-            $parentSku = $item->getProduct()->getData(ProductInterface::SKU);
-            if ($parentSku !== $item->getProduct()->getSku()) {
-                $itemData['parentsku'] = $parentSku;
-            }
-            $data[] = $itemData;
-        }
+		foreach ($quote->getAllVisibleItems() as $item)
+		{
+			/** @var Item $item */
+			$itemData = [
+				'item_id'   => $item->getProduct()->getSku(),
+				'item_name' => $item->getProduct()->getName(),
+				'price'     => $item->getProduct()->getPrice(),
+				'currency'  => $this->getBaseCurrency(),
+				'quantity'  => $item->getQty(),
+			];
+			// getData makes sure the chosen simple product / product options are ignored
+			$parentSku = $item->getProduct()->getData(ProductInterface::SKU);
+			if ($parentSku !== $item->getProduct()->getSku())
+			{
+				$itemData['parentsku'] = $parentSku;
+			}
+			$data[] = $itemData;
+		}
 
-        return $data;
-    }
+		return $data;
+	}
 }
