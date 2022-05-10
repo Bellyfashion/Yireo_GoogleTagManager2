@@ -66,20 +66,8 @@ class Success implements ArgumentInterface
 
         $order = $this->getOrder();
         return [
-            'transactionEntity' => 'ORDER',
-            'transactionId' => $this->getTransactionId($order),
-            'transactionDate' => (string) $order->getCreatedAt(),
-            'transactionAffiliation' => $this->getTransactionAffiliation(),
-            'transactionTotal' => $this->getTransactionTotal($order),
-            'transactionSubtotal' => (float) $order->getSubTotal(),
-            'transactionTax' => $this->getTransactionTax($order),
-            'transactionShipping' => $this->getTransactionShipping($order),
-            'transactionPayment' => $this->getPaymentLabel($order),
-            'transactionCurrency' => (string) $order->getOrderCurrencyCode(),
-            'transactionPromoCode' => $this->getTransactionPromoCode($order),
-            'transactionProducts' => $this->getItemsAsArray($order),
-            'ecommerce' => $this->getEcommerceAttributesAsArray($order),
-            'event' => 'purchase',
+			'event'     => 'purchase',
+			'ecommerce' => $this->getEcommerceAttributesAsArray($order),
         ];
     }
 
@@ -115,7 +103,9 @@ class Success implements ArgumentInterface
 	            'item_id' => $item->getSku(),
 	            'item_name' => $item->getName(),
                 'price' => $item->getPriceInclTax(),
+                'affiliation' => $item->getTransactionAffiliation(),
                 'quantity' => $item->getQtyOrdered(),
+                'item_brand'  => null,
             ];
             $parentSku = $item->getProduct()->getData(ProductInterface::SKU);
             if ($parentSku !== $item->getSku()) {
@@ -151,9 +141,7 @@ class Success implements ArgumentInterface
 	        'shipping' => $this->getTransactionShipping($order),
 	        'currency' => (string) $order->getOrderCurrencyCode(),
             'coupon'=> $this->getTransactionPromoCode($order),
-            'items' => [
-                'products' => $this->getItemsAsArray($order),
-            ],
+	        'items' => $this->getItemsAsArray($order),
         ];
     }
 
