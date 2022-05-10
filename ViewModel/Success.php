@@ -24,166 +24,166 @@ use Magento\Sales\Model\Order\Item;
  */
 class Success implements ArgumentInterface
 {
-    /**
-     * @var Config
-     */
-    private $config;
+	/**
+	 * @var Config
+	 */
+	private $config;
 
-    /**
-     * @var Session
-     */
-    private $checkoutSession;
+	/**
+	 * @var Session
+	 */
+	private $checkoutSession;
 
-    /**
-     * @var OrderRepositoryInterface
-     */
-    private $orderRepository;
+	/**
+	 * @var OrderRepositoryInterface
+	 */
+	private $orderRepository;
 
-    /**
-     * Generic constructor.
-     * @param Config $config
-     * @param Session $checkoutSession
-     * @param OrderRepositoryInterface $orderRepository
-     */
-    public function __construct(
-        Config $config,
-        Session $checkoutSession,
-        OrderRepositoryInterface $orderRepository
-    ) {
-        $this->config = $config;
-        $this->checkoutSession = $checkoutSession;
-        $this->orderRepository = $orderRepository;
-    }
+	/**
+	 * Generic constructor.
+	 *
+	 * @param   Config                    $config
+	 * @param   Session                   $checkoutSession
+	 * @param   OrderRepositoryInterface  $orderRepository
+	 */
+	public function __construct(
+		Config                   $config,
+		Session                  $checkoutSession,
+		OrderRepositoryInterface $orderRepository
+	)
+	{
+		$this->config          = $config;
+		$this->checkoutSession = $checkoutSession;
+		$this->orderRepository = $orderRepository;
+	}
 
-    /**
-     * @return array
-     */
-    public function getOrderAttributes(): array
-    {
-        if ($this->hasOrder() === false) {
-            return [];
-        }
+	/**
+	 * @return array
+	 */
+	public function getOrderAttributes(): array
+	{
+		if ($this->hasOrder() === false)
+		{
+			return [];
+		}
 
-        $order = $this->getOrder();
-        return [
-            'transactionEntity' => 'ORDER',
-            'transactionId' => $this->getTransactionId($order),
-            'transactionDate' => (string) $order->getCreatedAt(),
-            'transactionAffiliation' => $this->getTransactionAffiliation(),
-            'transactionTotal' => $this->getTransactionTotal($order),
-            'transactionSubtotal' => (float) $order->getSubTotal(),
-            'transactionTax' => $this->getTransactionTax($order),
-            'transactionShipping' => $this->getTransactionShipping($order),
-            'transactionPayment' => $this->getPaymentLabel($order),
-            'transactionCurrency' => (string) $order->getOrderCurrencyCode(),
-            'transactionPromoCode' => $this->getTransactionPromoCode($order),
-            'transactionProducts' => $this->getItemsAsArray($order),
-            'ecommerce' => $this->getEcommerceAttributesAsArray($order),
-            'event' => 'purchase',
-        ];
-    }
+		$order = $this->getOrder();
 
-    /**
-     * @return OrderInterface
-     */
-    private function getOrder(): OrderInterface
-    {
-        return $this->orderRepository->get($this->checkoutSession->getLastRealOrder()->getId());
-    }
+		return [
+			'event'     => 'purchase',
+			'ecommerce' => $this->getEcommerceAttributesAsArray($order),
+		];
+	}
 
-    /**
-     * @param OrderInterface $order
-     * @return string
-     */
-    public function getPaymentLabel(OrderInterface $order): string
-    {
-        $payment = $order->getPayment();
-        return $payment ? $payment->getMethod() : '';
-    }
+	/**
+	 * @return OrderInterface
+	 */
+	private function getOrder(): OrderInterface
+	{
+		return $this->orderRepository->get($this->checkoutSession->getLastRealOrder()->getId());
+	}
 
-    /**
-     * @param OrderInterface $order
-     * @return array
-     */
-    public function getItemsAsArray(OrderInterface $order): array
-    {
-        $data = [];
+	/**
+	 * @param   OrderInterface  $order
+	 *
+	 * @return string
+	 */
+	public function getPaymentLabel(OrderInterface $order): string
+	{
+		$payment = $order->getPayment();
 
-        foreach ($order->getItemsCollection([], true) as $item) {
-            /** @var Item $item */
-            $itemData = [
-	            'item_id' => $item->getSku(),
-	            'item_name' => $item->getName(),
-                'price' => $item->getPriceInclTax(),
-                'quantity' => $item->getQtyOrdered(),
-            ];
-            $parentSku = $item->getProduct()->getData(ProductInterface::SKU);
-            if ($parentSku !== $item->getSku()) {
-                $itemData['parentsku'] = $parentSku;
-            }
-            $data[] = $itemData;
-        }
+		return $payment ? $payment->getMethod() : '';
+	}
 
-        return $data;
-    }
+	/**
+	 * @param   OrderInterface  $order
+	 *
+	 * @return array
+	 */
+	public function getItemsAsArray(OrderInterface $order): array
+	{
+		$data = [];
 
-    /**
-     * @return bool
-     */
-    private function hasOrder(): bool
-    {
-        try {
-            $this->getOrder();
-        } catch (Exception $e) {
-            return false;
-        }
+		foreach ($order->getItemsCollection([], true) as $item)
+		{
+			/** @var Item $item */
+			$itemData  = [
+				'item_id'     => $item->getSku(),
+				'item_name'   => $item->getName(),
+				'price'       => $item->getPriceInclTax(),
+				'affiliation' => $item->getTransactionAffiliation(),
+				'quantity'    => $item->getQtyOrdered(),
+				'item_brand'  => null,
+			];
+			$parentSku = $item->getProduct()->getData(ProductInterface::SKU);
+			if ($parentSku !== $item->getSku())
+			{
+				$itemData['parentsku'] = $parentSku;
+			}
+			$data[] = $itemData;
+		}
 
-        return true;
-    }
+		return $data;
+	}
 
-    private function getEcommerceAttributesAsArray(OrderInterface $order): array
-    {
-        return [
-	        'transaction_id' => $this->getTransactionId($order),
-	        'affiliation' => $this->getTransactionAffiliation(),
-	        'value' => $this->getTransactionTotal($order),
-	        'tax' => $this->getTransactionTax($order),
-	        'shipping' => $this->getTransactionShipping($order),
-	        'currency' => (string) $order->getOrderCurrencyCode(),
-            'coupon'=> $this->getTransactionPromoCode($order),
-            'items' => [
-                'products' => $this->getItemsAsArray($order),
-            ],
-        ];
-    }
+	/**
+	 * @return bool
+	 */
+	private function hasOrder(): bool
+	{
+		try
+		{
+			$this->getOrder();
+		}
+		catch (Exception $e)
+		{
+			return false;
+		}
 
-    private function getTransactionId(OrderInterface $order): string
-    {
-        return (string)$order->getIncrementId();
-    }
+		return true;
+	}
 
-    private function getTransactionAffiliation(): string
-    {
-        return $this->config->getStoreName();
-    }
+	private function getEcommerceAttributesAsArray(OrderInterface $order): array
+	{
+		return [
+			'transaction_id' => $this->getTransactionId($order),
+			'affiliation'    => $this->getTransactionAffiliation(),
+			'value'          => $this->getTransactionTotal($order),
+			'tax'            => $this->getTransactionTax($order),
+			'shipping'       => $this->getTransactionShipping($order),
+			'currency'       => (string) $order->getOrderCurrencyCode(),
+			'coupon'         => $this->getTransactionPromoCode($order),
+			'items'          => $this->getItemsAsArray($order),
+		];
+	}
 
-    private function getTransactionTotal(OrderInterface $order): float
-    {
-        return (float)$order->getGrandTotal();
-    }
+	private function getTransactionId(OrderInterface $order): string
+	{
+		return (string) $order->getIncrementId();
+	}
 
-    private function getTransactionTax(OrderInterface $order): float
-    {
-        return (float)$order->getTaxAmount();
-    }
+	private function getTransactionAffiliation(): string
+	{
+		return $this->config->getStoreName();
+	}
 
-    private function getTransactionShipping(OrderInterface $order): float
-    {
-        return (float)$order->getShippingAmount();
-    }
+	private function getTransactionTotal(OrderInterface $order): float
+	{
+		return (float) $order->getGrandTotal();
+	}
 
-    private function getTransactionPromoCode(OrderInterface $order): string
-    {
-        return (string)$order->getCouponCode();
-    }
+	private function getTransactionTax(OrderInterface $order): float
+	{
+		return (float) $order->getTaxAmount();
+	}
+
+	private function getTransactionShipping(OrderInterface $order): float
+	{
+		return (float) $order->getShippingAmount();
+	}
+
+	private function getTransactionPromoCode(OrderInterface $order): string
+	{
+		return (string) $order->getCouponCode();
+	}
 }
