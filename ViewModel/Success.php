@@ -108,12 +108,12 @@ class Success implements ArgumentInterface
 		{
 			/** @var Item $item */
 			$itemData  = [
-				'item_id'     => $item->getSku(),
-				'item_name'   => $item->getName(),
-				'price'       => $item->getPriceInclTax(),
-				'affiliation' => $item->getTransactionAffiliation(),
-				'quantity'    => $item->getQtyOrdered(),
-				'item_brand'  => null,
+				'item_id'      => $item->getSku(),
+				'item_name'    => $item->getName(),
+				'price'        => (float) $item->getPriceInclTax(),
+				'quantity'     => (float) $item->getQtyOrdered(),
+				'item_brand'   => null,
+				'item_variant' => null
 			];
 			$parentSku = $item->getProduct()->getData(ProductInterface::SKU);
 			if ($parentSku !== $item->getSku())
