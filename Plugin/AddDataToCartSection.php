@@ -181,11 +181,13 @@ class AddDataToCartSection
 		{
 			/** @var Item $item */
 			$itemData = [
-				'item_id'   => $item->getProduct()->getSku(),
-				'item_name' => $item->getProduct()->getName(),
-				'price'     => $item->getProduct()->getPrice(),
-				'currency'  => $this->getBaseCurrency(),
-				'quantity'  => $item->getQty(),
+				'item_id'      => $item->getProduct()->getSku(),
+				'item_name'    => $item->getProduct()->getName(),
+				'price'        => (float) $item->getProduct()->getPrice(),
+				'currency'     => $this->getBaseCurrency(),
+				'quantity'     => (float) $item->getQty(),
+				'item_brand'   => null,
+				'item_variant' => null
 			];
 			// getData makes sure the chosen simple product / product options are ignored
 			$parentSku = $item->getProduct()->getData(ProductInterface::SKU);
